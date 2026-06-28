@@ -1,6 +1,6 @@
 # TASKS — a11y-alttext-commons
 
-> Status: Draft · Version: 0.1.0 · Last updated: 2026-06-28 · Owner: TBD (maintainer) · Lane: donated
+> Status: Draft · Version: 0.2.0 · Last updated: 2026-06-28 · Owner: TBD (maintainer) · Lane: donated
 
 Backlog for the `a11y-alttext-commons` good-deed project. Read alongside `PLAN.md` (same directory).
 
@@ -44,8 +44,14 @@ Prove one description can travel from an openly-licensed source to *merged upstr
 | a11y-alttext-commons-research-001 | Secure ≥1 upstream channel (Commons or textbook repo) | research | medium | low | document | — | Maintainer + Steward |
 | a11y-alttext-commons-data-001 | Define per-image description record + license/provenance format | data | small | low | dataset | style-001 | Maintainer |
 | a11y-alttext-commons-research-002 | Validate license-verification rules for target sources | research | small | medium | document | — | Steward |
-| a11y-alttext-commons-describe-001 | Hand-describe 10 curated images end-to-end (cold-start batch) | data | medium | medium | dataset | style-001, data-001, research-002 | Specialist reviewer |
+| a11y-alttext-commons-describe-001 | Hand-describe 10 curated images (cold-start batch covering decorative/simple/complex/sensitive) | data | medium | medium | dataset | research-001 (channel gate), style-001, data-001, research-002 | Specialist reviewer |
 | a11y-alttext-commons-pr-001 | Merge the 10 descriptions upstream + measure baseline share | maintenance | medium | medium | pr | research-001, describe-001 | Steward |
+
+**Sequencing — channel-securing is a hard gate.** `research-001` blocks `describe-001` and `pr-001`:
+no description is drafted or submitted until ≥1 upstream channel is confirmed. If the time-boxed
+channel-securing effort confirms no channel, the project hits its **kill/pivot criteria** (try the
+next candidate channel/collection per PLAN's decision tree, or stop) rather than producing
+undeliverable descriptions.
 
 **Key task acceptance criteria**
 
@@ -60,23 +66,41 @@ Prove one description can travel from an openly-licensed source to *merged upstr
   - [ ] Published, versioned, and licensed CC-BY-4.0.
 
 - **a11y-alttext-commons-research-001** (secure upstream channel)
+  - [ ] Evaluates candidate channels in priority order (open-textbook repos → Commons structured
+        captions → GLAM/IIIF partners) with each one's known acceptance posture, and applies the
+        PLAN decision tree to pick the first to pursue.
   - [ ] Identifies ≥1 concrete channel (named repo that accepts PRs, or a validated Commons
         workflow) confirmed to accept human-reviewed, AI-drafted descriptions.
+  - [ ] Produces a **pre-engagement exit artifact** for the chosen channel: a documented talk-page
+        (or equivalent) statement of intent, a bot/edit approval or confirmation that human-reviewed
+        edits at the proposed cadence are welcome, and an agreed volume ramp (start small, scale on
+        assent).
   - [ ] Records that channel's required output license and attribution format.
   - [ ] Documents the host's bot/automation policy and rate limits.
+  - [ ] States the time-box and the kill/pivot criteria if no channel is secured.
   - [ ] On success, flips `verifiedNeed=true` for tasks targeting that channel.
 
 - **a11y-alttext-commons-describe-001** (cold-start batch of 10)
+  - [ ] The batch of 10 is selected to exercise every path — ≥1 decorative, several simple
+        informative, ≥2 complex (incl. ≥1 chart/map/data figure), ≥1 sensitive (people/medical) —
+        not 10 easy photos.
   - [ ] All 10 images verified CC-* / PD with license + attribution recorded before description.
-  - [ ] Each description conforms to style guide v1; complex images include a long description.
-  - [ ] Every record passes human accuracy review against the actual image; sensitive images
-        cleared by a specialist.
+  - [ ] Each description conforms to style guide v1; complex images include a long description; any
+        chart/map/data figure follows the data-figure sub-procedure (source data/caption attached,
+        else describe structure not specific values).
+  - [ ] Every record is scored on the 4-dimension accuracy rubric against the actual image, with any
+        failure tagged by the error taxonomy; nothing below 3/4 on any dimension is kept.
+  - [ ] Every people/medical image gets human eyes regardless of flag confidence and is cleared by a
+        specialist meeting the credential bar.
   - [ ] No identity/private-attribute inference about any depicted person.
 
 - **a11y-alttext-commons-pr-001** (merge + baseline)
-  - [ ] ≥10 descriptions merged upstream and confirmed live for screen-reader users.
+  - [ ] ≥10 descriptions merged upstream and confirmed live for screen-reader users (additive only;
+        never overwriting an existing description).
   - [ ] Each merged item carries license + attribution + provenance.
-  - [ ] Baseline "share of described images" measured and recorded for one target collection.
+  - [ ] Baseline "share of described images" measured and recorded for one target collection using a
+        reproducible method: named snapshot + date, in-scope denominator, and programmatic
+        "described" detection (so later deltas are comparable).
 
 **M0 Definition of Done:** style guide v1 published; ≥1 upstream channel confirmed; ≥10
 descriptions merged upstream and live with full provenance; baseline described-share measured;
@@ -94,7 +118,7 @@ Turn the manual slice into a repeatable, policy-compliant pipeline.
 | a11y-alttext-commons-adapter-002 | Open-textbook PR adapter (locate figure, patch alt, open PR) | code | large | medium | pr | research-001, data-001 | Maintainer |
 | a11y-alttext-commons-pipeline-001 | License-verification pre-ingest gate (hard exclude unknown) | code | medium | medium | pr | research-002, data-001 | Steward |
 | a11y-alttext-commons-pipeline-002 | Flagging pass: complexity + sensitivity + duplicate detection | code | large | medium | pr | data-001 | Maintainer |
-| a11y-alttext-commons-doc-001 | Reviewer workflow + accuracy/sensitivity checklist | writing | small | low | document | style-001 | Maintainer |
+| a11y-alttext-commons-doc-001 | Reviewer workflow + 4-dimension accuracy rubric, error taxonomy & sensitivity-credential checklist | writing | small | low | document | style-001 | Maintainer |
 | a11y-alttext-commons-batch-001 | Describe + merge batch of ~100 (first repeatable run) | data | large | medium | pr | adapter-001 OR adapter-002, pipeline-001, pipeline-002, doc-001 | Reviewer rotation |
 
 **Key task acceptance criteria**
@@ -106,12 +130,18 @@ Turn the manual slice into a repeatable, policy-compliant pipeline.
 
 - **a11y-alttext-commons-pipeline-002** (flagging)
   - [ ] Classifies decorative vs informative and simple vs complex (routes complex → long desc).
-  - [ ] Flags people / identifiable individuals / medical / traumatic → specialist gate.
-  - [ ] Detects duplicates/near-duplicates to prevent redundant tasks.
+  - [ ] Flags people / identifiable individuals / medical / traumatic → specialist gate; people and
+        medical route to human review regardless of flag confidence (fail-open never ships unseen).
+  - [ ] Detects duplicates/near-duplicates via two-layer dedup: source-id exact match +
+        perceptual-hash (pHash) near-duplicate.
+  - [ ] Implements per-image claim/locking (TTL + owner stamp keyed on source-id/hash bucket) so
+        parallel sessions cannot double-describe or double-PR the same image.
 
 - **a11y-alttext-commons-adapter-001** (Commons adapter)
   - [ ] Submits a human-reviewed caption/description via the Wikibase/MediaWiki API with correct
         license + attribution, honouring bot policy and rate limits.
+  - [ ] Additive-only: never overwrites an existing non-empty description (skip or route as a proposed
+        improvement); detects edit conflicts and re-fetches/re-evaluates rather than clobbering.
   - [ ] Tokens supplied by the human's environment; never logged or committed.
   - [ ] Records the resulting edit/revision id as `upstreamRef`.
 
@@ -134,7 +164,7 @@ Meaningfully move the described-share metric in one-to-two collections, with qua
 | a11y-alttext-commons-batch-002 | Scale to ≥500 merged across ≥2 collections | data | large | medium | pr | batch-001 | Reviewer rotation |
 | a11y-alttext-commons-doc-002 | Specialist guide: data figures (charts/maps/diagrams) | writing | medium | medium | document | style-001 | Data-figure specialist |
 | a11y-alttext-commons-research-003 | Beneficiary validation with screen-reader users | research | small | low | document | batch-001 | Maintainer |
-| a11y-alttext-commons-data-002 | Quality metrics: acceptance + reviewer-corrected rates | data | small | low | dataset | batch-001 | Maintainer |
+| a11y-alttext-commons-data-002 | Quality metrics: acceptance, reviewer-corrected, rubric scores, inter-reviewer agreement & error-taxonomy mix | data | small | low | dataset | batch-001 | Maintainer |
 
 **Key task acceptance criteria**
 

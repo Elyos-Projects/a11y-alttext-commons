@@ -1,6 +1,6 @@
 # PLAN — a11y-alttext-commons
 
-> Status: Draft · Version: 0.1.0 · Last updated: 2026-06-28 · Owner: TBD (maintainer) · Lane: donated
+> Status: Draft · Version: 0.2.0 · Last updated: 2026-06-28 · Owner: TBD (maintainer) · Lane: donated
 
 ## Executive summary
 
@@ -92,11 +92,36 @@ the headline metric; **merged-and-live** is.
 |---|---|---|
 | Described images **merged upstream and live** | 0 | ≥ 500 across ≥ 2 collections |
 | **Acceptance rate** of submitted descriptions (merged ÷ submitted) | n/a | ≥ 80% (signals quality, not spam) |
+| **Mean accuracy-rubric score** (per the 4-dimension rubric below) | n/a | ≥ 3.5 / 4 mean; no description merged below 3/4 on any dimension |
 | **Reviewer-corrected rate** (descriptions edited before merge) | n/a | ≤ 25%, trending down |
+| **Inter-reviewer agreement** (on a sampled double-reviewed subset) | n/a | ≥ 0.7 (e.g. Cohen's κ or % exact-match on the rubric); recalibrate the rubric if below |
+| **Error-taxonomy mix** (share of corrections by failure class) | n/a | tracked; *hallucinated detail* and *wrong value* trending toward 0 |
 | **Share of described images** in a chosen target collection | measured at M0 | +X percentage points (set once baseline known) |
 | **Confirmed-accurate sensitive-image descriptions** (people/maps/medical) | 0 | 100% expert/specialist-reviewed before merge |
 | **License-compliance violations** (non-open media touched) | 0 | **0** (hard gate; any violation is a stop-the-line incident) |
 | Beneficiary validation (screen-reader user confirms a described batch is usable) | none | ≥ 1 qualitative review per target collection |
+
+**Accuracy rubric (replaces a binary "accuracy review passed").** Every description is scored
+1–4 on four independent dimensions, not a single pass/fail flag:
+
+1. **Factual fidelity** — every stated detail is actually present in the image (no inference).
+2. **Completeness** — the content the image carries for the lesson is conveyed (no missing content).
+3. **Objectivity** — observational, neutral language; no speculation about identity/intent.
+4. **Functional adequacy** — works as a text alternative for a screen-reader user at the right length.
+
+**Error taxonomy.** When a reviewer corrects or rejects a description, the failure is tagged with
+one or more classes so we can see *how* the model fails and tune the style guide: **hallucinated
+detail** (asserts something not in the image), **wrong value** (misreads a number/label/data point),
+**missing content** (omits lesson-bearing content), **non-objective** (speculation / loaded
+language). The taxonomy mix is reported alongside the reviewer-corrected rate.
+
+**Counting "share of described images" (reproducible).** The metric is `described ÷ in-scope` for a
+named collection snapshot at a recorded date. The **denominator** is the count of in-scope
+(openly-licensed, non-decorative) images in that snapshot. **"Described"** is detected
+programmatically per host: for Commons, a non-empty structured caption / `P2096`-style field in the
+file's target language; for a textbook repo, a non-empty, non-placeholder `alt`/long-description
+field on the figure. Baseline and every delta are computed against the same snapshot definition so
+they are comparable over time and across reviewers.
 
 Note: percentage-point targets are deferred until M0 measures a real baseline in a chosen
 collection — inventing one now would be dishonest.
@@ -133,18 +158,38 @@ per-image task workspace and opens the upstream PR. The CLI never runs an agent 
 1. **Select & verify source** — pull an image record from an approved, openly-licensed collection.
    Confirm license is CC-* or public domain; capture canonical URL, license, author/attribution,
    and source identifier. *If license is not clearly open → drop, do not ingest.*
-2. **Pre-flight flagging** — automated checks classify the image: decorative vs informative;
-   complexity (simple photo vs chart/map/diagram → needs long description); sensitivity
-   (people / identifiable individuals / medical / potentially traumatic) → routes to specialist
-   review; duplicate/near-duplicate detection to avoid redundant work.
-3. **Draft** — agent produces alt-text per the style guide, plus a long description if complex.
+2. **Pre-flight flagging & dedup** — automated checks classify the image: decorative vs
+   informative; complexity (simple photo vs chart/map/diagram → needs long description);
+   sensitivity (people / identifiable individuals / medical / potentially traumatic) → routes to
+   specialist review. **Dedup is two-layer:** (a) exact match on the host **source identifier**
+   (`sourceCollection` + `imageId`), and (b) near-duplicate detection via a **perceptual hash**
+   (e.g. pHash) compared against already-described records, so re-uploads/crops/resizes are caught.
+   A flagged near-duplicate routes to human confirmation rather than auto-skip.
+3. **Claim & lock** — before drafting, the session **claims** the image by writing a lock keyed on
+   `sourceCollection` + `imageId` (and its perceptual-hash bucket) into the shared `records/` index.
+   A claim has a TTL and a session/owner stamp; an unexpired claim makes the image invisible to other
+   sessions' batches. This prevents two parallel sessions from double-describing or double-PRing the
+   same image. Claims are released on completion, rejection, or TTL expiry.
+4. **Draft** — agent produces alt-text per the style guide, plus a long description if complex.
    Output is a structured record, never free-floating text.
-4. **Human accuracy review** — a reviewer verifies the description is correct, objective, and
-   functional. Charts/maps/data figures and all sensitive images require the appropriate reviewer.
-5. **Upstream contribution** — an adapter formats the accepted description for the host and submits
-   it (Commons structured caption/description edit; or a PR to the textbook repo). Attribution and
-   provenance travel with it.
-6. **Track to live** — record merge status; a deed is "done" only when merged and visible upstream.
+5. **Human accuracy review** — a reviewer scores the description against the 4-dimension accuracy
+   rubric (see Success metrics) and tags any failure with the error taxonomy; it must be correct,
+   objective, complete, and functional. Charts/maps/data figures and all sensitive images require
+   the appropriate reviewer.
+   - **Data-figure sub-procedure (charts/maps/data figures).** A reviewer may not verify specific
+     numbers from the rendered image alone. The describer must either (a) attach the figure's
+     **source data, caption, or surrounding text** so stated values are checkable against a source,
+     or (b) fall back to **describing the structure, not specific values** ("a bar chart comparing
+     four regions, highest at left, declining to the right"), explicitly avoiding any number that
+     cannot be sourced. Unsourced specific values are a **wrong value** error and are not merged.
+6. **Upstream contribution (additive only)** — an adapter formats the accepted description for the
+   host and submits it (Commons structured caption/description edit; or a PR to the textbook repo).
+   The adapter **must not overwrite an existing non-empty description**: if the host already has one,
+   the item is skipped (or routed to human review as a proposed improvement, never a silent
+   replacement), keeping every contribution additive. Adapters detect edit conflicts / concurrent
+   changes and, on conflict, re-fetch and re-evaluate rather than clobber. Attribution and provenance
+   travel with the contribution.
+7. **Track to live** — record merge status; a deed is "done" only when merged and visible upstream.
 
 **Components**
 
@@ -169,10 +214,13 @@ requires — see Data, licensing & compliance). DCO sign-off (`git commit -s`) o
 imageId            stable id within source collection
 sourceUrl          canonical URL of the image
 sourceCollection   e.g. "wikimedia-commons" | "openstax-bio-2e" | "<glam>"
+perceptualHash     pHash for near-duplicate detection across sessions
+claim              { owner, sessionId, claimedAt, ttl } lock to prevent double-work (nullable)
 license            SPDX-style id, e.g. "CC-BY-4.0" | "CC0-1.0" | "PD"
 attribution        required attribution string (author/creator + source)
 imageClass         decorative | informative-simple | informative-complex
 sensitivity        none | people | identifiable-person | medical | sensitive-historical
+existingDescription whether host already has a non-empty description (skip/route, never overwrite)
 altText            short functional alt-text (or "" if decorative)
 longDescription    long description for complex images (nullable)
 confidence         model self-reported / heuristic confidence
@@ -243,9 +291,18 @@ limits, and bot/automation policies. We do not scrape around access controls.
 **Required review before a deed is "done":**
 
 1. **License check passed** (recorded license + attribution + provenance).
-2. **Accuracy review** by a human — mandatory for every description; specialist for medium/high.
+2. **Accuracy review** by a human — mandatory for every description, scored on the 4-dimension
+   accuracy rubric (factual fidelity, completeness, objectivity, functional adequacy) with any
+   failure tagged by the error taxonomy; nothing merges below 3/4 on any dimension. Specialist for
+   medium/high.
 3. **Style-guide conformance** (length, objectivity, decorative-vs-informative correct).
-4. **Sensitivity clearance** for flagged images.
+4. **Sensitivity clearance (testable gate).** This gate is not a function of model confidence:
+   **every image flagged as containing people or as medical gets human eyes regardless of how
+   confident — or unconfident — the flag is** (a low-confidence "maybe a person" still routes to
+   review; the flag failing open never lets a people/medical image through unseen). The reviewer
+   clearing a sensitive image must meet a stated **credential bar**: sensitivity/people imagery →
+   reviewer with documented sensitivity-review training; medical/diagnostic → credentialed expert
+   (high-risk path) or the item is declined. Credentials are recorded in `provenance`.
 
 **Definition of Shipped (project-level).** A reviewed description is **merged into the upstream
 source** (Commons structured data, or the open-textbook repo) and is **live** for screen-reader
@@ -260,13 +317,49 @@ anything scales.
 **M0 — Foundation & cold-start (prove one end-to-end deed).**
 Goal: publish the style guide, secure at least one upstream channel, and merge a tiny hand-curated
 batch end-to-end.
+
+**Sequencing — securing a channel is a hard gate.** The channel-securing research task is a
+**blocking prerequisite**: no describe or PR task starts until ≥ 1 upstream channel is confirmed.
+This avoids producing descriptions with nowhere to ship. **Kill/pivot criteria:** if, after the
+time-boxed channel-securing effort, *no* channel from the candidate list will accept human-reviewed,
+AI-drafted descriptions, the project **pivots** (try the next candidate channel / collection per the
+decision tree below) or **stops** (does not proceed to describe/PR work) — it does not generate a
+backlog of undeliverable descriptions.
+
+**Candidate upstream channels (priority order, with known acceptance posture).** The metric is
+deliberately **decoupled from any single host** — "described images merged upstream" counts across
+whichever channels are live:
+1. **Open-textbook repos** (OpenStax-style and similar) — PR-based, clearest acceptance path where
+   the repo invites contributions; acceptance posture: *generally welcoming to additive a11y PRs,
+   per-repo confirmation still required.*
+2. **Wikimedia Commons structured-data captions** (`P2096`-style / structured captions) — large
+   volume, but acceptance posture: *AI-drafted edits at volume are policy-sensitive; needs talk-page
+   pre-engagement and bot/edit-rate agreement before scaling.*
+3. **GLAM open-access collections / IIIF partners** — high-value, but acceptance posture: *requires a
+   named institutional partner and a delivery mechanism; TO BE SECURED.*
+
+**Decision tree (which channel first):** confirmed PR-accepting textbook repo? → start there.
+Else, a Commons community willing to accept the volume after pre-engagement? → start there. Else, a
+named GLAM partner with a delivery path? → start there. Else → hit kill/pivot criteria above.
+
+**M0 image-selection criteria (the batch of 10 must exercise every path, not 10 easy photos).** The
+hand-curated cold-start batch is deliberately spread across image classes so the pipeline is proven
+on hard cases too: at least one **decorative** image (alt = ""), several **simple informative**
+photos, at least two **complex** images requiring a long description (including at least one
+chart/map/data figure exercising the data-figure sub-procedure), and at least one **sensitive**
+image (people/identifiable/medical) exercising the sensitivity gate and specialist review. A batch
+of 10 trivially-easy photos is explicitly disallowed — it would not prove the pipeline.
+
 Exit criteria:
 - Alt-text style guide v1 published.
 - ≥ 1 upstream channel **confirmed** (a repo that will take our PRs, or a validated Commons
-  workflow) — closes the partner gap for at least one collection.
+  workflow) — closes the partner gap for at least one collection; **gates** all describe/PR work.
 - License-verification + provenance record format finalised and applied to a sample.
+- Cold-start batch selected per the image-selection criteria above (covers decorative / simple /
+  complex / sensitive paths).
 - **≥ 10 descriptions merged upstream and live**, each with recorded license + attribution.
-- Baseline "share of described images" measured for one chosen target collection.
+- Baseline "share of described images" measured for one chosen target collection per the counting
+  method in Success metrics (named snapshot + denominator + "described" detection).
 
 **M1 — Adapters & flagging (make it repeatable).**
 Goal: turn the manual slice into a repeatable pipeline.
@@ -315,8 +408,15 @@ fan-out: at scale, **one image = one task**, drawn from a milestone-scoped batch
 ## Dependencies & integrations
 
 - **Wikimedia Commons / MediaWiki + Wikibase API** — structured-data captions/descriptions;
-  subject to community norms, bot policy, and rate limits.
-- **Open-textbook repositories** (OpenStax-style and similar) — must accept external PRs.
+  subject to community norms, bot policy, and rate limits. **Pre-engagement is a required exit
+  artifact** of the channel-securing research task, not an afterthought: a documented **talk-page (or
+  equivalent) statement of intent**, an explicit **bot/edit approval** or confirmation that
+  human-reviewed manual edits at the proposed cadence are welcome, and an **agreed volume ramp**
+  (starting small, scaling only with community assent). Describe/PR work does not begin until this
+  artifact exists for the chosen channel.
+- **Open-textbook repositories** (OpenStax-style and similar) — must accept external PRs;
+  pre-engagement artifact for a repo is a confirmation (issue/maintainer reply/contributing policy)
+  that additive a11y PRs at the proposed cadence are welcome.
 - **GLAM open-access collections / IIIF endpoints** — source images and license metadata.
 - **License metadata sources** — SPDX identifiers; CC license deeds; host-provided license fields.
 - **Elyos platform pieces** — `packages/cli` (task workspace + PR prep, donated lane), the Task
@@ -327,15 +427,16 @@ fan-out: at scale, **one image = one task**, drawn from a milestone-scoped batch
 
 | Risk | Likelihood | Impact | Mitigation | Owner |
 |---|---|---|---|---|
-| Inaccurate description (esp. charts/maps/data) merged upstream | Medium | High | Mandatory human accuracy review; specialist reviewer for data figures; complexity flagging routes hard cases | Maintainer / Reviewers |
+| Inaccurate description (esp. charts/maps/data) merged upstream | Medium | High | Mandatory human accuracy review scored on the 4-dimension rubric + error taxonomy; specialist reviewer for data figures; complexity flagging routes hard cases; **data-figure sub-procedure** (require source data/caption, else describe structure not specific values) | Maintainer / Reviewers |
 | Non-open / unclear-license image ingested or described | Low | High | Hard pre-ingest license gate; record license+attribution; "unknown = excluded"; stop-the-line on any violation | Steward |
 | Sensitive imagery (people, medical, traumatic) mishandled | Medium | High | Sensitivity flagging; specialist gate; no identity/private-attribute inference; high-risk escalation path | Reviewers / Expert |
 | No upstream partner/channel secured → nothing ships | Medium | High | M0 exit criterion is a confirmed channel; `verifiedNeed=false` until secured; do not scale before delivery proven | Maintainer / Steward |
-| Host community rejects bulk/automated contributions | Medium | Medium | Honour bot/automation policy; start small; engage community early; human-reviewed, not spam | Steward |
+| Host community rejects bulk/automated contributions | Medium | Medium | Honour bot/automation policy; concrete pre-engagement exit artifact (talk-page intent, bot/edit approval, agreed volume ramp) before any volume; start small; human-reviewed, not spam; metric decoupled from a single host so one rejection is not fatal (decision tree across candidate channels) | Steward |
 | Privacy harm from describing identifiable individuals | Low | High | Exclude unclear-consent images even if file is openly licensed; neutral observational language only | Reviewers |
 | Reviewer capacity becomes the bottleneck | High | Medium | Reviewer rotation; batch sizing; flagging to triage easy vs hard; only scale fan-out to review capacity | Maintainer |
-| Duplicate / redundant work across sessions | Medium | Low | Duplicate/near-duplicate detection; batch claim/locking; milestone-scoped batches | Maintainer |
-| Model hallucinates detail not present in image | Medium | High | Style guide forbids inference; "describe what is visible"; reviewer verifies against image | Reviewers |
+| Duplicate / redundant work across sessions | Medium | Low | Two-layer dedup (source-id exact match + perceptual-hash near-duplicate); TTL'd per-image claim/locking so parallel sessions can't double-describe/double-PR; milestone-scoped batches | Maintainer |
+| Model hallucinates detail not present in image | Medium | High | Style guide forbids inference; "describe what is visible"; reviewer verifies against image and tags *hallucinated detail* in the error taxonomy | Reviewers |
+| Contribution overwrites or conflicts with an existing description | Low | Medium | Adapters are additive-only: never overwrite a non-empty host description (skip or route as proposed improvement); detect edit conflicts and re-fetch rather than clobber | Steward / Maintainer |
 
 ## Security & privacy
 
@@ -356,6 +457,10 @@ fan-out: at scale, **one image = one task**, drawn from a milestone-scoped batch
 
 - **Post-delivery ownership.** The descriptions live upstream in the host collections — they are
   maintained by those communities once merged, which is the durable, non-Elyos-dependent outcome.
+- **Additive contributions only.** Contributions add a missing description; they never overwrite an
+  existing one. If a host later edits or reverts a contributed description, that is the community's
+  prerogative — the provenance log records the original contribution and its final disposition, and
+  conflicts are resolved by re-fetch-and-re-evaluate, never by clobbering host changes.
 - **Project maintenance.** The maintainer keeps the style guide and adapters current with host API
   and policy changes; reviewer rotation keeps review capacity alive.
 - **Outcome tracking.** A lightweight dashboard tracks merged/live counts and described-share per
@@ -371,7 +476,12 @@ fan-out: at scale, **one image = one task**, drawn from a milestone-scoped batch
   (CC0 vs CC-BY) — confirm before submitting at any volume.
 - What is the current Wikimedia community/bot policy stance on AI-drafted, human-reviewed captions
   at modest volume? Engage before scaling.
-- How is reviewer credentialing handled for medium-risk data figures and for sensitive imagery?
+- What exact **credential bar** clears each gate — what documented training qualifies a
+  sensitivity/people reviewer, and what credential qualifies a medical/diagnostic expert? (The gate
+  is already specified as testable: every people/medical image gets human eyes regardless of flag
+  confidence; this question is about who is qualified to be those eyes.)
+- What **inter-reviewer agreement** threshold and sampling rate keep the accuracy rubric calibrated,
+  and how often is the rubric / error taxonomy revised from the observed failure mix?
 - What is the right batch size to keep reviewer capacity from becoming the bottleneck?
 - Should descriptions be translated (multilingual a11y) — and if so, as this project or a sibling?
 
