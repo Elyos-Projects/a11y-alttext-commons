@@ -1,0 +1,32 @@
+{
+  "id": "a11y-alttext-commons-style-001",
+  "title": "Author alt-text & long-description style guide v1",
+  "project": "a11y-alttext-commons",
+  "type": "writing",
+  "lane": "donated",
+  "priority": "high",
+  "domain": ["accessibility", "education", "open-culture"],
+  "riskTier": "low",
+  "urgent": false,
+  "deliverable": "document",
+  "tokenEstimate": "small",
+  "status": "open",
+  "context": "Openly-licensed images in open textbooks, Wikimedia Commons, and GLAM open collections frequently lack alt-text and long descriptions, excluding blind and low-vision screen-reader users. Before any image is described at scale, the project needs a single, versioned style guide so that descriptions from many parallel AI sessions are consistent, objective, and WCAG-conformant.",
+  "objective": "Write and publish version 1 of the alt-text and long-description style guide that all describe/batch tasks will follow.",
+  "acceptanceCriteria": [
+    "Defines alt-text length/structure limits and an objectivity rule (describe only what is visible; never infer identity, intent, or unseen facts).",
+    "Gives clear decorative-vs-informative decision rules, including when alt-text should be empty.",
+    "Covers complex images (charts, maps, diagrams, data figures) and when a long description is required.",
+    "Includes an explicit sensitive-imagery section (people, identifiable individuals, medical, traumatic/historical) and routing to specialist review.",
+    "Aligns with WCAG 2.x SC 1.1.1 and is published, versioned, and licensed CC-BY-4.0."
+  ],
+  "resources": [
+    "C:\\code\\elyos\\planning\\projects\\a11y-alttext-commons\\PLAN.md",
+    "C:\\code\\elyos\\governance\\proposals\\a11y-alttext-commons.md",
+    "WCAG 2.x Success Criterion 1.1.1 (Non-text Content)"
+  ],
+  "output": "A versioned style-guide document (style-guide/alt-text-style-guide.md), CC-BY-4.0, covering alt-text rules, long-description rules, decorative-vs-informative, data-figure conventions, and sensitive-imagery handling.",
+  "requestor": "jdev1977",
+  "verifiedNeed": true,
+  "outputLicense": "CC-BY-4.0"
+}
