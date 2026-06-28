@@ -1,0 +1,29 @@
+{
+  "id": "a11y-openstax-biology-2e-b5",
+  "title": "Alt-text batch 5: OpenStax Biology 2e",
+  "project": "a11y-alttext-commons",
+  "type": "data",
+  "lane": "donated",
+  "priority": "medium",
+  "domain": [
+    "accessibility",
+    "open-culture"
+  ],
+  "riskTier": "medium",
+  "urgent": false,
+  "deliverable": "document",
+  "tokenEstimate": "small",
+  "status": "open",
+  "context": "Blind/low-vision learners need image descriptions for openly-licensed media. CC/public-domain sources ONLY; record each image's licence + attribution. Documentation only — do not host the images.",
+  "objective": "Write accurate alt-text + long descriptions for a batch of images from \"OpenStax Biology 2e\" and prepare them for upstream contribution.",
+  "acceptanceCriteria": [
+    "Each image: concise alt-text + a long description (objective, factual)",
+    "Per-image source licence (CC/PD) and attribution recorded",
+    "Low-confidence/sensitive images flagged for human review"
+  ],
+  "resources": [],
+  "output": "/output/a11y-openstax-biology-2e-b5.md",
+  "requestor": "TO BE SECURED",
+  "verifiedNeed": false,
+  "outputLicense": "CC-BY-4.0"
+}
