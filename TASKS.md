@@ -1,6 +1,6 @@
 # TASKS — a11y-alttext-commons
 
-> Status: Draft · Version: 0.2.0 · Last updated: 2026-06-28 · Owner: TBD (maintainer) · Lane: donated
+> Status: Draft · Version: 0.2 (competitive analysis merged) · Last updated: 2026-06-29 · Owner: TBD (maintainer) · Lane: donated
 
 Backlog for the `a11y-alttext-commons` good-deed project. Read alongside `PLAN.md` (same directory).
 
@@ -56,11 +56,21 @@ undeliverable descriptions.
 **Key task acceptance criteria**
 
 - **a11y-alttext-commons-style-001** (style guide v1)
+  - [ ] **Co-authored with at least one blind/low-vision reviewer** (their judgement of what works as
+        a substitute is a first-class input, not a late validation).
   - [ ] Defines alt-text length/structure limits and an objectivity rule ("describe what is
         visible; never infer identity, intent, or unseen facts").
   - [ ] Gives decorative-vs-informative decision rules (when alt = "").
+  - [ ] States the **context-free-vs-context-bound rule**: a context-free Commons caption is NOT a
+        substitute for context-bound textbook alt text (WCAG 1.1.1); the same image may legitimately
+        get different descriptions in different host contexts.
+  - [ ] Requires **verbatim transcription of text embedded within an image** (a hard WCAG failure if
+        omitted) — not treated as an optional byproduct.
   - [ ] Covers complex images (charts, maps, diagrams, data figures) and when a long description
-        is required.
+        is required, and **prefers structured/tabular representation for charts/tables** over prose
+        where the host supports it (NCAM).
+  - [ ] **Cites and builds on** NCAM/GBH STEM guidance, DIAGRAM Center / Poet, and Cooper Hewitt /
+        Smithsonian guidelines rather than reinventing them.
   - [ ] Has an explicit sensitive-imagery section (people, identifiable individuals, medical,
         traumatic/historical) and routing to specialist review.
   - [ ] Published, versioned, and licensed CC-BY-4.0.
@@ -68,7 +78,9 @@ undeliverable descriptions.
 - **a11y-alttext-commons-research-001** (secure upstream channel)
   - [ ] Evaluates candidate channels in priority order (open-textbook repos → Commons structured
         captions → GLAM/IIIF partners) with each one's known acceptance posture, and applies the
-        PLAN decision tree to pick the first to pursue.
+        PLAN decision tree to pick the first to pursue. **Leads with open-textbook PR channels as a
+        deliberate choice** given the 2025–26 Wikimedia AI-content hardening; Commons is channel #2,
+        entered only behind relentless human-reviewed framing + pre-engagement.
   - [ ] Identifies ≥1 concrete channel (named repo that accepts PRs, or a validated Commons
         workflow) confirmed to accept human-reviewed, AI-drafted descriptions.
   - [ ] Produces a **pre-engagement exit artifact** for the chosen channel: a documented talk-page
@@ -80,6 +92,15 @@ undeliverable descriptions.
   - [ ] States the time-box and the kill/pivot criteria if no channel is secured.
   - [ ] On success, flips `verifiedNeed=true` for tasks targeting that channel.
 
+- **a11y-alttext-commons-research-002** (validate license-verification rules)
+  - [ ] Defines the machine-or-human license-verification rules for each target source ("unknown =
+        excluded").
+  - [ ] **Resolves the derivative-work question:** is a textual description an *independent*
+        copyrightable work (likely) or a *derivative* of the image? Document the answer so output
+        licensing is framed as a choice per host *norm/CLA*, not a copyright *compulsion*. Until
+        resolved, default to the host's expected license.
+  - [ ] Records each chosen channel's required output license + attribution format.
+
 - **a11y-alttext-commons-describe-001** (cold-start batch of 10)
   - [ ] The batch of 10 is selected to exercise every path — ≥1 decorative, several simple
         informative, ≥2 complex (incl. ≥1 chart/map/data figure), ≥1 sensitive (people/medical) —
@@ -87,9 +108,14 @@ undeliverable descriptions.
   - [ ] All 10 images verified CC-* / PD with license + attribution recorded before description.
   - [ ] Each description conforms to style guide v1; complex images include a long description; any
         chart/map/data figure follows the data-figure sub-procedure (source data/caption attached,
-        else describe structure not specific values).
+        else describe structure not specific values); embedded text is transcribed verbatim.
+  - [ ] Each draft carries a **per-claim "visible-in-image" vs "inferred" annotation**, and the
+        reviewer **verifies asserted detail against ground truth** (source caption / surrounding text /
+        structured data) for every image — not just data figures — rather than "looking and agreeing."
   - [ ] Every record is scored on the 4-dimension accuracy rubric against the actual image, with any
-        failure tagged by the error taxonomy; nothing below 3/4 on any dimension is kept.
+        failure tagged by the error taxonomy (incl. the **context-mismatch** class); nothing below
+        3/4 on any dimension is kept. **"Functional adequacy" carries a blind/low-vision
+        screen-reader-user signal**, not a sighted proxy alone.
   - [ ] Every people/medical image gets human eyes regardless of flag confidence and is cleared by a
         specialist meeting the credential bar.
   - [ ] No identity/private-attribute inference about any depicted person.
@@ -102,9 +128,10 @@ undeliverable descriptions.
         reproducible method: named snapshot + date, in-scope denominator, and programmatic
         "described" detection (so later deltas are comparable).
 
-**M0 Definition of Done:** style guide v1 published; ≥1 upstream channel confirmed; ≥10
-descriptions merged upstream and live with full provenance; baseline described-share measured;
-zero license violations.
+**M0 Definition of Done:** style guide v1 published (co-authored with a blind/low-vision reviewer);
+≥1 blind/low-vision reviewer recruited into the standing review gate; ≥1 upstream channel confirmed
+(textbook-first); derivative-work/output-license question resolved; ≥10 descriptions merged upstream
+and live with full provenance; baseline described-share measured; zero license violations.
 
 ---
 
@@ -118,7 +145,7 @@ Turn the manual slice into a repeatable, policy-compliant pipeline.
 | a11y-alttext-commons-adapter-002 | Open-textbook PR adapter (locate figure, patch alt, open PR) | code | large | medium | pr | research-001, data-001 | Maintainer |
 | a11y-alttext-commons-pipeline-001 | License-verification pre-ingest gate (hard exclude unknown) | code | medium | medium | pr | research-002, data-001 | Steward |
 | a11y-alttext-commons-pipeline-002 | Flagging pass: complexity + sensitivity + duplicate detection | code | large | medium | pr | data-001 | Maintainer |
-| a11y-alttext-commons-doc-001 | Reviewer workflow + 4-dimension accuracy rubric, error taxonomy & sensitivity-credential checklist | writing | small | low | document | style-001 | Maintainer |
+| a11y-alttext-commons-doc-001 | Reviewer workflow + 4-dim accuracy rubric (incl. blind-user functional-adequacy signal & visible/inferred verification checklist), error taxonomy (incl. context-mismatch) & sensitivity-credential checklist | writing | small | low | document | style-001 | Maintainer |
 | a11y-alttext-commons-batch-001 | Describe + merge batch of ~100 (first repeatable run) | data | large | medium | pr | adapter-001 OR adapter-002, pipeline-001, pipeline-002, doc-001 | Reviewer rotation |
 
 **Key task acceptance criteria**
@@ -149,9 +176,11 @@ Turn the manual slice into a repeatable, policy-compliant pipeline.
   - [ ] ≥100 descriptions merged upstream; acceptance rate measured.
   - [ ] All went through license gate → flagging → human review → adapter submission.
 
-**M1 Definition of Done:** ≥1 adapter live and policy-compliant; license gate + flagging
-operational; reviewer workflow documented with ≥2 reviewers onboarded; ≥100 descriptions merged
-upstream with measured acceptance rate; zero license violations.
+**M1 Definition of Done:** ≥1 adapter live and policy-compliant (textbook-PR first); license gate +
+flagging operational; reviewer workflow documented with ≥2 reviewers onboarded **including the
+blind/low-vision reviewer in the standing gate**; the described-image **records dataset published as
+a first-class CC0/CC-BY deliverable**; ≥100 descriptions merged upstream with measured acceptance
+rate; zero license violations.
 
 ---
 
@@ -192,6 +221,8 @@ validation; quality metrics dashboarded; zero license violations.
 | a11y-alttext-commons-pipeline-003 | Outcome-tracking dashboard (merged/live per collection) | code | medium | low | pr | Sustainability metric |
 | a11y-alttext-commons-research-004 | High-risk escalation path (medical/legal imagery) | research | small | high | document | Defines credentialed expert sign-off flow |
 | a11y-alttext-commons-maint-001 | Adapter maintenance vs host API/policy changes | maintenance | medium | low | pr | Ongoing post-delivery |
+| a11y-alttext-commons-data-003 | Publish described-image dataset as open API / benchmark | data | medium | low | dataset | Adjacent opportunity; eval AI describers vs human-reviewed ground truth |
+| a11y-alttext-commons-mcp-001 | "alt-text-commons" MCP server (style guide + ground-truth fetch + license verifier + pHash dedup + draft-with-visible/inferred annotations) | code | large | medium | pr | Adjacent opportunity; de-risks reviewer bottleneck |
 
 ---
 

@@ -1,6 +1,6 @@
 # PLAN — a11y-alttext-commons
 
-> Status: Draft · Version: 0.2.0 · Last updated: 2026-06-28 · Owner: TBD (maintainer) · Lane: donated
+> Status: Draft · Version: 0.2 (competitive analysis merged) · Last updated: 2026-06-29 · Owner: TBD (maintainer) · Lane: donated
 
 ## Executive summary
 
@@ -25,6 +25,17 @@ a mandatory human accuracy-review gate and a sensitivity-flagging pass, not by t
 The hard guardrail is **licensing**: only CC-licensed or public-domain sources are ever ingested
 or described, and license + attribution + provenance are recorded per image.
 
+**The project's named, public invariant — "no AI-drafted description ships without human sign-off,
+ever."** This is stated explicitly because it is the differentiator versus every auto-alt-text bot
+(which ship unreviewed model output) and the credibility wedge for community trust in an era of
+AI-content backlash. The hallucination risk is *sharper than "charts are hard"*: a fluent,
+plausible, confident-but-wrong description is the hardest thing for a reviewer to catch precisely
+because it reads correctly, and a screen-reader user "would have little way of noticing unless they
+knew in advance what was in an image." So the data-figure rule (verify stated detail against a
+source, don't just "look and agree") is **generalized to every image**, and **blind/low-vision
+screen-reader users sit inside the review loop from M0**, not only as end-beneficiaries validated
+late — only a screen-reader user can judge whether a description actually *works* as a substitute.
+
 This document is honest about what is not yet in place: **no upstream partner org is secured**,
 and the Wikimedia / open-textbook contribution pathways must be validated against current
 community norms and bot policies before scaling. M0 is a thin, manual, end-to-end slice to prove
@@ -36,7 +47,10 @@ the pipeline and earn the right to scale.
 
 - **Blind and low-vision learners** who rely on screen readers (JAWS, NVDA, VoiceOver, TalkBack)
   and Braille displays. Undescribed images in open courseware mean missed content and unequal
-  access to free education.
+  access to free education. Crucially, blind and low-vision users are **not only beneficiaries but
+  reviewers**: they hold a standing role in the review gate from M0 (see Quality gates and
+  Governance), because "functional adequacy" — whether a description truly substitutes for the
+  image — can only be judged by a screen-reader user, not a sighted proxy.
 - **Educators and accessibility teams** who adopt open textbooks and are legally and ethically
   obligated to provide accessible materials but lack capacity to describe thousands of figures.
 
@@ -74,7 +88,10 @@ delivery-dependent tasks. M0 includes securing this channel as an exit criterion
 
 - **Not** describing, ingesting, scraping, or even caching non-open / unclear-license media.
 - **Not** building a hosted SaaS, public image-upload service, or a general "describe any image" API.
-- **Not** OCR/transcription of text-in-images as a primary deliverable (may be a byproduct only).
+- **Not** standalone OCR/bulk text-extraction as a primary deliverable. **However**, verbatim
+  transcription of text *embedded within* a described image (labels, captions inside the figure,
+  signage) **is a required style-guide rule** — untranscribed text in an image is a hard WCAG
+  failure, so it travels with the description rather than being treated as an optional byproduct.
 - **Not** editorial or content moderation of the host collections; we add descriptions, we do not
   curate, reclassify, or remove images.
 - **Not** medical/legal/diagnostic interpretation of imagery (e.g. "this X-ray shows…"). Where an
@@ -99,7 +116,9 @@ the headline metric; **merged-and-live** is.
 | **Share of described images** in a chosen target collection | measured at M0 | +X percentage points (set once baseline known) |
 | **Confirmed-accurate sensitive-image descriptions** (people/maps/medical) | 0 | 100% expert/specialist-reviewed before merge |
 | **License-compliance violations** (non-open media touched) | 0 | **0** (hard gate; any violation is a stop-the-line incident) |
-| Beneficiary validation (screen-reader user confirms a described batch is usable) | none | ≥ 1 qualitative review per target collection |
+| **Blind/low-vision reviewer in the gate** (standing review role, not late validation) | none | ≥ 1 screen-reader-user reviewer participating in the review gate from M0 |
+| Beneficiary validation (screen-reader user confirms a described batch is usable) | none | ≥ 1 qualitative review per target collection (in addition to the standing M0 gate role above) |
+| **Beneficiary-reach signal** (sampled confirmation a real screen-reader user reaching a merged item is well served) | none | sampled per collection — closes the gap between "merged/live" and "actually helps" |
 
 **Accuracy rubric (replaces a binary "accuracy review passed").** Every description is scored
 1–4 on four independent dimensions, not a single pass/fail flag:
@@ -107,13 +126,20 @@ the headline metric; **merged-and-live** is.
 1. **Factual fidelity** — every stated detail is actually present in the image (no inference).
 2. **Completeness** — the content the image carries for the lesson is conveyed (no missing content).
 3. **Objectivity** — observational, neutral language; no speculation about identity/intent.
-4. **Functional adequacy** — works as a text alternative for a screen-reader user at the right length.
+4. **Functional adequacy** — works as a text alternative for a screen-reader user at the right
+   length, and serves the image's *purpose in its specific context* (WCAG 1.1.1). This dimension
+   **requires a screen-reader-user signal** wherever feasible and may not be cleared on a sighted
+   reviewer's proxy judgement alone — only a blind/low-vision user can confirm a description truly
+   substitutes for the image.
 
 **Error taxonomy.** When a reviewer corrects or rejects a description, the failure is tagged with
 one or more classes so we can see *how* the model fails and tune the style guide: **hallucinated
 detail** (asserts something not in the image), **wrong value** (misreads a number/label/data point),
 **missing content** (omits lesson-bearing content), **non-objective** (speculation / loaded
-language). The taxonomy mix is reported alongside the reviewer-corrected rate.
+language), and **context-mismatch** (factually correct *about the image* but wrong *for the host
+context* — the WCAG-1.1.1 failure mode most likely to slip past a pure factual-fidelity check, e.g.
+a caption that describes a photo's scenery when the textbook uses it to illustrate cell structure).
+The taxonomy mix is reported alongside the reviewer-corrected rate.
 
 **Counting "share of described images" (reproducible).** The metric is `described ÷ in-scope` for a
 named collection snapshot at a recorded date. The **denominator** is the count of in-scope
@@ -147,6 +173,51 @@ collection — inventing one now would be dishonest.
 - Bulk automated submission that violates a host's bot/automation policy.
 - Translation of descriptions into other languages (valuable, but a future project/extension).
 
+## Competitive landscape & differentiation
+
+No incumbent occupies the exact niche — *an open, human-reviewed, context-rich, upstream-contributed
+alt-text commons for openly-licensed images*. The space splits into four clusters:
+
+- **On-demand AI describers (consumer, real-time, unreviewed)** — **Be My Eyes / Be My AI**
+  (GPT-4V-based) and **Microsoft Seeing AI**. Instant, free, loved by a large blind user base — but
+  explicitly hallucination-prone (the vendor itself warns of wrong answers; the documented Be My AI
+  failure of reading a raincoat's "clouds and raindrops" as "hearts and stars" is the exact
+  fluent-but-wrong class a blind user cannot detect), ephemeral, per-user, and **nothing persists
+  upstream**. These are *complementary, not competitors*: they describe the user's world on demand;
+  we fix the missing alt text in the source.
+- **Automated alt-text bots that publish unreviewed** — **AltBot** and similar Fediverse/WordPress
+  bots fill empty alt at posting time, but ship unreviewed AI output (the bots themselves warn
+  "results may sometimes be factually incorrect") — the exact anti-pattern our guardrails forbid.
+- **Expert human description services (high quality, closed/paid, not a commons)** — **Scribely**
+  (professional, standards-compliant, museum/gallery clients) and **CIDI** (Georgia Tech;
+  subject-matter-expert describers, braille/etext). Excellent and rigorous, but commercial,
+  per-client, and **not an open, reusable public dataset**.
+- **Standards, tooling & guidelines (allies, not competitors)** — **DIAGRAM Center / Poet**
+  (Benetech; the closest philosophical sibling — an open image-description *training tool* over EPUB,
+  not an upstream-contribution pipeline), **NCAM/GBH** (authoritative STEM image-description
+  guidelines), **Cooper Hewitt / Smithsonian** (museum guidance), **Wikimedia Commons SDC** (our
+  largest target *and* a partial overlap — yet <10% of Wikipedia images have alt text, a gap
+  acknowledged by Wikimedia itself), and **OpenStax** (strong on its *own* new figures; the long
+  tail of adapted OER and older figures is exactly our opening). Our style guide **cites and builds
+  on** these rather than reinventing them.
+
+**Gaps we fill / differentiators to win:**
+
+- **Blind/low-vision users *in the review loop*, not just as end-beneficiaries** — the signature
+  differentiator. It beats both the unreviewed bots and the sighted-only expert services on the one
+  axis that actually defines quality (does the description *work* for a screen-reader user).
+- **"No AI ships unreviewed" as a public, enforced invariant** — the credibility wedge for
+  Wikimedia/OER community trust in an era of AI-content backlash.
+- **Persistent, upstream, additive-only, never-overwrite** — we fix the source once so every
+  downstream reader benefits; we don't build a rival silo or clobber existing human work.
+- **Education-grade complex-image rigor** (NCAM/DIAGRAM data-figure procedure) — the consumer apps'
+  weakest spot, and where OER's missing descriptions hurt most.
+- **Open & free as a public good** — unlike the paid/closed expert services; we publish an open
+  described-image **dataset** with radical provenance (image → reviewed description → rubric scores →
+  error tags → license/attribution/model/reviewer), uniquely valuable for research and for
+  evaluating future describer models.
+- **Outcome accountability** — "merged and live for screen-reader users," not "descriptions generated."
+
 ## Solution approach & architecture
 
 This is a **content/data pipeline** project with supporting **adapter code**, run in the **donated
@@ -171,17 +242,29 @@ per-image task workspace and opens the upstream PR. The CLI never runs an agent 
    sessions' batches. This prevents two parallel sessions from double-describing or double-PRing the
    same image. Claims are released on completion, rejection, or TTL expiry.
 4. **Draft** — agent produces alt-text per the style guide, plus a long description if complex.
-   Output is a structured record, never free-floating text.
+   Output is a structured record, never free-floating text. **Every asserted detail is annotated
+   "visible-in-image" vs "inferred,"** so the reviewer receives a verification checklist rather than
+   fluent prose to rubber-stamp. (See "Claude vision as a first-draft engine" below for what the
+   model does and does not decide.)
 5. **Human accuracy review** — a reviewer scores the description against the 4-dimension accuracy
    rubric (see Success metrics) and tags any failure with the error taxonomy; it must be correct,
    objective, complete, and functional. Charts/maps/data figures and all sensitive images require
-   the appropriate reviewer.
+   the appropriate reviewer, and **functional adequacy carries a blind/low-vision screen-reader-user
+   signal** (the blind reviewer holds a standing seat in the gate from M0, not a late-stage
+   validation only).
+   - **Verify-against-a-source, generalized to ALL images (not just data figures).** Because a
+     fluent, plausible, confident-but-wrong description is the hardest failure to catch, the reviewer
+     verifies asserted detail against **ground truth** (the figure's source caption, surrounding
+     text, `depicts`/structured data) wherever it exists — not by "looking at the image and
+     agreeing." The per-claim visible-vs-inferred annotation from the draft step directs this check.
    - **Data-figure sub-procedure (charts/maps/data figures).** A reviewer may not verify specific
      numbers from the rendered image alone. The describer must either (a) attach the figure's
      **source data, caption, or surrounding text** so stated values are checkable against a source,
      or (b) fall back to **describing the structure, not specific values** ("a bar chart comparing
      four regions, highest at left, declining to the right"), explicitly avoiding any number that
      cannot be sourced. Unsourced specific values are a **wrong value** error and are not merged.
+     **Prefer a structured/tabular representation** (e.g. an HTML table for a bar/pie chart or data
+     table) over narrative prose wherever the host supports it, per NCAM guidance.
 6. **Upstream contribution (additive only)** — an adapter formats the accepted description for the
    host and submits it (Commons structured caption/description edit; or a PR to the textbook repo).
    The adapter **must not overwrite an existing non-empty description**: if the host already has one,
@@ -202,7 +285,9 @@ per-image task workspace and opens the upstream PR. The CLI never runs an agent 
     MediaWiki/Wikibase API, honouring community + bot policy.
   - `adapters/textbook-pr/` — open-textbook repo PR generation (locate the figure's source,
     insert/patch the alt/description field, open a DCO-signed PR).
-- `records/` — per-image description records (the project's data artifact / dataset deliverable).
+- `records/` — per-image description records: a **first-class open dataset deliverable** (image ref →
+  human-reviewed description → rubric scores → error tags → license/attribution/provenance),
+  published under CC0/CC-BY. See "Adjacent opportunities" for its dataset/API/benchmark potential.
 
 **Tech stack & conventions.** TypeScript, ESM, pnpm workspaces. Adapter code MIT-licensed.
 Generated descriptions licensed to match the host (CC-BY / CC-BY-SA / CC0 / PD as the source
@@ -221,8 +306,12 @@ attribution        required attribution string (author/creator + source)
 imageClass         decorative | informative-simple | informative-complex
 sensitivity        none | people | identifiable-person | medical | sensitive-historical
 existingDescription whether host already has a non-empty description (skip/route, never overwrite)
+hostContext        the image's context at the host (e.g. textbook chapter/caption) — drives
+                   context-bound alt text; null/"" for context-free Commons captions
 altText            short functional alt-text (or "" if decorative)
 longDescription    long description for complex images (nullable)
+embeddedTextVerbatim verbatim transcription of any text inside the image (nullable)
+claimAnnotations   per-asserted-detail "visible-in-image" vs "inferred" labels (reviewer checklist)
 confidence         model self-reported / heuristic confidence
 reviewStatus       drafted | needs-specialist | reviewed | rejected
 upstreamRef        PR URL or Commons edit/revision id once submitted
@@ -237,7 +326,40 @@ provenance         tool, model, date, reviewer
 - *License match, not license override.* The description inherits the host's licensing expectation
   so it can be legally merged there; we do not impose an Elyos license on upstream content.
 - *Human-in-the-loop is non-optional.* No description merges without human accuracy review; this is
-  the difference between "helpful" and "confidently wrong."
+  the difference between "helpful" and "confidently wrong." Stated as the project's named public
+  invariant: **no AI-drafted description ships without human sign-off, ever.**
+- *Context-free captions are not a substitute for context-bound alt text.* WCAG 1.1.1 requires a
+  text alternative that serves the image's purpose **in its context** — the same photo legitimately
+  needs different alt text in a biology chapter vs a history chapter. A Wikimedia Commons structured
+  caption is **context-free by construction**, while a textbook figure's alt text is
+  **context-bound**. So: a Commons caption is *not* presented as a substitute for context-specific
+  textbook alt text, the same image may legitimately receive different descriptions in different host
+  contexts, and a "context-mismatch" failure is a first-class error-taxonomy class (see Success
+  metrics). The style guide states this explicitly.
+- *Build on existing description standards, don't reinvent them.* The style guide cites and adopts
+  NCAM/GBH STEM image-description guidance (data-first drill-down, tables-as-tables), the
+  DIAGRAM Center / Poet conventions for complex images, and Cooper Hewitt / Smithsonian museum
+  guidance (no "image of…", verbatim transcription of embedded text, neutral age/gender language).
+
+**Claude vision as a first-draft engine (always a draft for human review).** The donated-lane agent
+uses Claude's vision + long context to *accelerate*, never to *decide*:
+
+- **First-draft alt text + long description** from the image, conditioned on the style guide and the
+  image's context (surrounding text, caption, `depicts` data).
+- **Context & ground-truth gathering** — assemble the figure's caption / surrounding text / source
+  data into an evidence packet so both the draft and the reviewer can be checked against a source.
+- **Long-description structuring** — convert a dense diagram into NCAM-style drill-down (summary →
+  detail → data) and propose tabular representation for charts.
+- **Pre-flight triage/flagging** — decorative-vs-informative, simple-vs-complex, and sensitivity
+  (people/medical/traumatic) routing. Flag liberally; fail-open routes to a human, never ships unseen.
+- **Per-claim self-annotation** — label each asserted detail "visible-in-image" vs "inferred" and
+  surface low-confidence claims, handing the reviewer a verification checklist.
+
+Where Claude **must not be the decider (hard human gates):** final alt text (never merged on the
+model's say-so); license / public-domain determination ("unknown = excluded" is a human judgement,
+machine-assisted only); sensitivity clearance (the model's flag *routes*, it never *clears*);
+identity / private-attribute inference (forbidden — observational language only); and context/function
+fit (a human, ideally blind-user, judgement that WCAG 1.1.1 demands).
 
 ## Data, licensing & compliance
 
@@ -261,6 +383,19 @@ provenance         tool, model, date, reviewer
 **Output licensing.** Generated descriptions are contributed under a license **compatible with the
 host** so they can be merged: typically CC-BY-4.0 or CC0-1.0 for Commons captions, and the
 textbook's existing CC license for textbook PRs. Adapter/pipeline **code** is MIT.
+
+**Is a description a derivative work of the image? (Open legal question — resolve in `research-002`.)**
+The plan's "license match, not override" stance should be understood as a **contribution-norm / CLA
+choice (what the host wants), not a copyright *compulsion*.** The unsettled legal reality: a textual
+description of an image is most likely an *independent* copyrightable work (the describer's own
+expression) — analogous to a book review not being a derivative of the book — **not** a derivative
+of the image. If so, contributors may have a *choice* of license rather than an obligation to inherit
+the image's. (Note: a *very detailed* long description of a *copyrighted* image could raise
+derivative-work questions — but this project only ever ingests CC/PD source images, so the source-side
+question is moot; the live question is purely about the *description's own* license.) **Action:**
+`research-002` confirms whether we are choosing a license per host *norm* vs copyright *compulsion*,
+and the answer is recorded before any volume submission. Until resolved, we default to the host's
+expected license (the conservative, mergeable choice).
 
 **Privacy / PII stance.** Images may depict people. The pipeline:
 
@@ -288,15 +423,26 @@ limits, and bot/automation policies. We do not scrape around access controls.
   credentialed expertise (medical imaging, legal/forensic). These require credentialed expert
   sign-off before merge, or are declined.
 
+**Named invariant (applies to all of the below): no AI-drafted description ships without human
+sign-off, ever.** Stated publicly in PLAN, README, and every upstream talk-page pitch — it is the
+trust wedge against the AI-content backlash and the difference between this project and an auto-bot.
+
 **Required review before a deed is "done":**
 
 1. **License check passed** (recorded license + attribution + provenance).
 2. **Accuracy review** by a human — mandatory for every description, scored on the 4-dimension
    accuracy rubric (factual fidelity, completeness, objectivity, functional adequacy) with any
    failure tagged by the error taxonomy; nothing merges below 3/4 on any dimension. Specialist for
-   medium/high.
-3. **Style-guide conformance** (length, objectivity, decorative-vs-informative correct).
-4. **Sensitivity clearance (testable gate).** This gate is not a function of model confidence:
+   medium/high. Asserted detail is **verified against ground truth** (source caption / surrounding
+   text / structured data) via the draft's per-claim visible-vs-inferred annotation, not by "looking
+   and agreeing."
+3. **Blind/low-vision reviewer signal in the gate (from M0).** "Functional adequacy" carries a
+   screen-reader-user judgement — a standing review role, not a late-stage validation. At least one
+   blind/low-vision reviewer also helps author the style guide (`style-001`). Where blind-reviewer
+   capacity is the binding constraint, fan-out is throttled to it rather than bypassing it.
+4. **Style-guide conformance** (length, objectivity, decorative-vs-informative correct, embedded
+   text transcribed verbatim, context-appropriate for the host).
+5. **Sensitivity clearance (testable gate).** This gate is not a function of model confidence:
    **every image flagged as containing people or as medical gets human eyes regardless of how
    confident — or unconfident — the flag is** (a low-confidence "maybe a person" still routes to
    review; the flag failing open never lets a people/medical image through unseen). The reviewer
@@ -326,15 +472,26 @@ AI-drafted descriptions, the project **pivots** (try the next candidate channel 
 decision tree below) or **stops** (does not proceed to describe/PR work) — it does not generate a
 backlog of undeliverable descriptions.
 
+**Deliberate sequencing — lead M0 with open-textbook PR channels, not Commons.** This is a
+*considered choice*, not just a priority list. Through 2025–26 Wikimedia governance hardened sharply
+against AI-generated content (English Wikipedia speedy-deletion for suspected LLM articles, Aug 2025;
+a March 2026 policy prohibiting LLM-generated/rewritten article prose). These target *article prose*,
+not accessibility captions — but the *cultural* climate means an "AI-drafted captions at volume"
+pitch will draw scrutiny even when fully human-reviewed. Open-textbook PR channels have the cleanest
+additive-a11y acceptance path and the least AI-content friction, so M0 lands its first merges there;
+Commons is sequenced as channel #2, entered only behind relentless human-reviewed framing and the
+pre-engagement artifact.
+
 **Candidate upstream channels (priority order, with known acceptance posture).** The metric is
 deliberately **decoupled from any single host** — "described images merged upstream" counts across
 whichever channels are live:
 1. **Open-textbook repos** (OpenStax-style and similar) — PR-based, clearest acceptance path where
    the repo invites contributions; acceptance posture: *generally welcoming to additive a11y PRs,
-   per-repo confirmation still required.*
+   per-repo confirmation still required.* **Lead channel for M0 (see deliberate sequencing above).**
 2. **Wikimedia Commons structured-data captions** (`P2096`-style / structured captions) — large
-   volume, but acceptance posture: *AI-drafted edits at volume are policy-sensitive; needs talk-page
-   pre-engagement and bot/edit-rate agreement before scaling.*
+   volume, but acceptance posture: *AI-drafted edits at volume are policy-sensitive, sharpened by the
+   2025–26 AI-content hardening; needs talk-page pre-engagement, a relentlessly human-reviewed
+   framing, and a bot/edit-rate agreement before scaling.*
 3. **GLAM open-access collections / IIIF partners** — high-value, but acceptance posture: *requires a
    named institutional partner and a delivery mechanism; TO BE SECURED.*
 
@@ -351,9 +508,14 @@ image (people/identifiable/medical) exercising the sensitivity gate and speciali
 of 10 trivially-easy photos is explicitly disallowed — it would not prove the pipeline.
 
 Exit criteria:
-- Alt-text style guide v1 published.
-- ≥ 1 upstream channel **confirmed** (a repo that will take our PRs, or a validated Commons
-  workflow) — closes the partner gap for at least one collection; **gates** all describe/PR work.
+- Alt-text style guide v1 published — **co-authored with at least one blind/low-vision reviewer**,
+  building on NCAM / DIAGRAM-Poet / Cooper Hewitt guidance (incl. verbatim embedded-text
+  transcription and tables-as-tables for charts), and stating the context-free-vs-context-bound rule.
+- **At least one blind/low-vision screen-reader-user reviewer recruited into the standing review
+  gate** (not deferred to M2 validation).
+- ≥ 1 upstream channel **confirmed** (a textbook repo that will take our PRs first, per the
+  deliberate sequencing; or a validated Commons workflow) — closes the partner gap for at least one
+  collection; **gates** all describe/PR work.
 - License-verification + provenance record format finalised and applied to a sample.
 - Cold-start batch selected per the image-selection criteria above (covers decorative / simple /
   complex / sensitive paths).
@@ -364,9 +526,14 @@ Exit criteria:
 **M1 — Adapters & flagging (make it repeatable).**
 Goal: turn the manual slice into a repeatable pipeline.
 Exit criteria:
-- Commons adapter and/or textbook-PR adapter working and policy-compliant.
-- Pre-flight flagging (complexity, sensitivity, duplicate) operational and routing to review.
-- Reviewer workflow + checklist documented; ≥ 2 reviewers onboarded.
+- Textbook-PR adapter and/or Commons adapter working and policy-compliant (textbook-PR first, per
+  the deliberate sequencing).
+- Pre-flight flagging (complexity, sensitivity, duplicate) operational and routing to review; drafts
+  carry per-claim visible-vs-inferred annotations.
+- Reviewer workflow + checklist documented; ≥ 2 reviewers onboarded, **including the blind/low-vision
+  reviewer in the standing gate**.
+- The described-image **records dataset** (image ref → reviewed description → rubric scores → error
+  tags → license/attribution/provenance) published as a first-class CC0/CC-BY deliverable.
 - ≥ 100 descriptions merged upstream; acceptance rate measured.
 
 **M2 — Controlled scale (one collection, deep).**
@@ -397,6 +564,10 @@ fan-out: at scale, **one image = one task**, drawn from a milestone-scoped batch
 - **Maintainer (Owner):** TBD — owns the style guide, pipeline, adapters, and overall quality bar.
 - **Reviewers / rotation:** a pool of accuracy reviewers; at least one with data-figure (chart/map)
   skill and one trained for sensitive/people imagery. Rotation documented in M1.
+- **Blind/low-vision reviewer (standing gate role, from M0):** at least one screen-reader user holds
+  a standing seat in the review gate — not a late-stage validator — owning the "functional adequacy"
+  judgement and co-authoring the style guide. Recruiting and fairly compensating this role is an
+  explicit M0 concern (see Open questions).
 - **Steward (last-mile owner):** owns the relationship with each upstream channel and shepherds
   contributions to *merged/live* — the person accountable for "delivered, not merged."
 - **Partner / requestor:** TO BE SECURED — the upstream collection(s) and any beneficiary
@@ -433,7 +604,11 @@ fan-out: at scale, **one image = one task**, drawn from a milestone-scoped batch
 | No upstream partner/channel secured → nothing ships | Medium | High | M0 exit criterion is a confirmed channel; `verifiedNeed=false` until secured; do not scale before delivery proven | Maintainer / Steward |
 | Host community rejects bulk/automated contributions | Medium | Medium | Honour bot/automation policy; concrete pre-engagement exit artifact (talk-page intent, bot/edit approval, agreed volume ramp) before any volume; start small; human-reviewed, not spam; metric decoupled from a single host so one rejection is not fatal (decision tree across candidate channels) | Steward |
 | Privacy harm from describing identifiable individuals | Low | High | Exclude unclear-consent images even if file is openly licensed; neutral observational language only | Reviewers |
-| Reviewer capacity becomes the bottleneck | High | Medium | Reviewer rotation; batch sizing; flagging to triage easy vs hard; only scale fan-out to review capacity | Maintainer |
+| Reviewer capacity becomes the bottleneck | High | Medium | Reviewer rotation; batch sizing; flagging to triage easy vs hard; only scale fan-out to review capacity; MCP describer tool hands reviewers a verification checklist not raw prose | Maintainer |
+| Blind/low-vision reviewer capacity (the standing-gate scarce resource) unfunded/unavailable | Medium | High | Recruit + fairly compensate blind reviewers from M0; throttle fan-out to blind-review capacity rather than bypassing it; co-author style guide with a blind reviewer so quality is front-loaded | Maintainer / Steward |
+| Fluent-but-plausible wrong description rubber-stamped by a sighted reviewer | Medium | High | Per-claim visible-vs-inferred annotation + verify-against-ground-truth for ALL images (not just data figures); blind-user functional-adequacy signal; double-review sampling | Reviewers |
+| Host AI-content backlash blocks Commons at volume (2025–26 hardening) | Medium | Medium | Lead M0 with textbook PR channels; relentless human-reviewed framing + pre-engagement before Commons volume; metric decoupled from any single host | Steward |
+| Context-mismatch (correct about image, wrong for host context) merged | Medium | Medium | Context-mismatch is a first-class error class; Commons captions not treated as substitute for context-bound alt text; reviewer checks fit-for-context | Reviewers |
 | Duplicate / redundant work across sessions | Medium | Low | Two-layer dedup (source-id exact match + perceptual-hash near-duplicate); TTL'd per-image claim/locking so parallel sessions can't double-describe/double-PR; milestone-scoped batches | Maintainer |
 | Model hallucinates detail not present in image | Medium | High | Style guide forbids inference; "describe what is visible"; reviewer verifies against image and tags *hallucinated detail* in the error taxonomy | Reviewers |
 | Contribution overwrites or conflicts with an existing description | Low | Medium | Adapters are additive-only: never overwrite a non-empty host description (skip or route as proposed improvement); detect edit conflicts and re-fetch rather than clobber | Steward / Maintainer |
@@ -468,6 +643,26 @@ fan-out: at scale, **one image = one task**, drawn from a milestone-scoped batch
 - **Wind-down.** If a channel closes, in-flight items are either completed or cleanly withdrawn; the
   provenance log records final disposition.
 
+## Adjacent opportunities (note, not committed scope)
+
+Two byproducts of this pipeline have strong standalone value and are recorded here so they are not
+lost — neither is in current scope:
+
+- **Open alt-text dataset / API & benchmark.** The `records/` described-image dataset (image ref →
+  human-reviewed description → rubric scores → error tags → license/provenance), published under
+  CC0/CC-BY, is a unique open asset. Exposed as an open API/benchmark it becomes a way to *evaluate
+  whether AI describers are improving against human-reviewed ground truth* — turning a provenance log
+  into a research public good.
+- **"alt-text-commons" MCP server.** An MCP server bundling the style guide + ground-truth/context
+  fetch + license verifier + dedup (pHash) lookup + a draft-with-visible/inferred-annotations tool
+  would let any donated-lane agent draft in house style and hand the reviewer a verification
+  checklist (not just prose). This also directly de-risks the reviewer bottleneck (a High-likelihood
+  risk in this plan).
+
+Sibling project ideas (perpendicular, reuse this pipeline): `caption-commons` (AV transcripts),
+`easy-read-plus` (plain-language renderings of the same descriptions), `open-pictograms`
+(AAC-symbol descriptions), and `loc-public-domain-engine` (a clean-licensed PD image supply source).
+
 ## Open questions
 
 - Which upstream channel is secured first — a specific open textbook repo, Commons, or a GLAM
@@ -483,7 +678,24 @@ fan-out: at scale, **one image = one task**, drawn from a milestone-scoped batch
 - What **inter-reviewer agreement** threshold and sampling rate keep the accuracy rubric calibrated,
   and how often is the rubric / error taxonomy revised from the observed failure mix?
 - What is the right batch size to keep reviewer capacity from becoming the bottleneck?
+- **Blind-reviewer capacity & compensation** — recruiting and *fairly paying* blind/low-vision
+  reviewers for a *standing* gate role (not late validation) is the project's true scarce resource.
+  Where do they come from, and is it funded? At "one image = one task," does blind-user review cap
+  throughput far below describe capacity, and how is fan-out throttled to it?
+- **Is a description a derivative of the image, or an independent work?** Confirm we are choosing a
+  license per host *norm/CLA*, not per copyright *compulsion* (resolve in `research-002`; see Data,
+  licensing & compliance).
+- **Wikimedia's real posture on human-reviewed AI-drafted captions at volume**, given the 2025–26
+  article-content AI restrictions — does the captions/accessibility carve-out hold? (Engage before
+  scaling; this is why M0 leads with textbook PRs.)
+- **Context vs context-free** — can a single per-image task model honestly serve both Commons
+  (context-free captions) and textbook figures (context-bound alt text), or do these need distinct
+  task types?
+- **How do we catch fluent-but-wrong descriptions at scale** — which reviewer aids
+  (visible/inferred annotation, source-data attachment, double-review sampling) actually drive the
+  *hallucinated-detail* and *wrong-value* error rates toward zero?
 - Should descriptions be translated (multilingual a11y) — and if so, as this project or a sibling?
+  (Note: Commons captions are inherently multilingual + CC0, a natural home for a translation sibling.)
 
 ## References
 
@@ -494,3 +706,48 @@ fan-out: at scale, **one image = one task**, drawn from a milestone-scoped batch
 - WCAG 2.x Success Criterion 1.1.1 (Non-text Content) — text-alternative requirement.
 - Creative Commons license suite (CC-BY, CC-BY-SA, CC0) and Public Domain.
 - Wikimedia Commons structured data (captions / depicts) and MediaWiki/Wikibase API + bot policy.
+- `COMPETITIVE-ANALYSIS.md` (same directory) — competitive/improvement analysis merged into this v0.2.
+- NCAM / GBH effective practices for description of STEM images (data-first, drill-down, tables-as-tables).
+- DIAGRAM Center / Poet (Benetech) image-description training tool and guidelines.
+- Cooper Hewitt / Smithsonian guidelines for image description (no "image of…", transcribe embedded text).
+- Be My Eyes / Be My AI and Microsoft Seeing AI (on-demand AI describers; documented hallucination risk).
+- Wikimedia AI-content governance (2025–26 hardening on AI-generated/rewritten article content).
+- U.S. Copyright Office Circular 14 (derivative works) and CC attribution-practice guidance.
+
+## Changelog — v0.2 (analysis merged)
+
+Fixes applied from the Correctness & completeness review:
+
+- Promoted blind/low-vision screen-reader users into the M0/M1 review gate as a *standing role*
+  (co-authoring the style guide; owning "functional adequacy"), not just M2 validation.
+- Named "no AI-drafted description ships without human sign-off, ever" as a first-class public invariant.
+- Generalized "verify asserted detail against a source" from the data-figure sub-procedure to ALL
+  images, backed by a per-claim visible-vs-inferred draft annotation (anti-hallucination).
+- Added the description-is-a-derivative-work license question (likely independent work → license per
+  host norm/CLA, not copyright compulsion) to Data/licensing, Open questions, and `research-002`.
+- Addressed the context-free-Commons vs context-bound-textbook WCAG 1.1.1 tension (Key decisions +
+  style guide) and added a "context-mismatch" error-taxonomy class.
+- Made "lead M0 with open-textbook PR channels" an explicit, deliberate sequencing choice given the
+  2025–26 Wikimedia AI-content hardening (Commons sequenced as channel #2 behind pre-engagement).
+- Made verbatim transcription of text *embedded within* an image a required style-guide rule (was an
+  out-of-scope byproduct); added "prefer structured/tabular representation for charts" (NCAM).
+- Made the `records/` described-image dataset a first-class CC0/CC-BY deliverable; added a
+  beneficiary-reach metric beyond "merged/live."
+
+Integrated additions from the analysis strategy:
+
+- New "## Competitive landscape & differentiation" section (Be My Eyes/Be My AI, Seeing AI,
+  AltBot, Scribely/CIDI, DIAGRAM-Poet/NCAM/Cooper Hewitt/Commons SDC/OpenStax) with the
+  differentiator: blind/low-vision users *in the review loop*.
+- Folded "Claude API leverage" into Solution/architecture: a "Claude vision as a first-draft engine"
+  subsection (vision first-draft, ground-truth gathering, structuring, triage, per-claim
+  self-annotation) plus an explicit "where Claude must NOT decide" list.
+- Folded top optimizations into the Roadmap and Work breakdown (blind reviewer in M0/M1 gate, named
+  invariant, generalized verify-against-source, context-mismatch class, textbook-first sequencing,
+  derivative-work resolution, NCAM/DIAGRAM adoption, dataset deliverable, beneficiary-reach metric,
+  MCP describer tool).
+- Added an "## Adjacent opportunities" note (open alt-text dataset/API & benchmark; "alt-text-commons"
+  MCP server; sibling projects).
+- Merged the analysis's Open Questions into the plan's Open questions; added supporting references and
+  risk-register rows (blind-reviewer capacity, fluent-but-wrong rubber-stamp, AI-content backlash,
+  context-mismatch).
